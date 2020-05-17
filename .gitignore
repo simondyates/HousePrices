@@ -1,0 +1,6 @@
+**/venv
+**/.idea
+**/.ipynb_checkpoints
+**/rsconnect
+.Rproj.user/
+.Rhistory
