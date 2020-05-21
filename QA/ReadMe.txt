@@ -1,0 +1,1 @@
+This folder contains core project files that have been QA'd by at least one other team member.

@@ -1,0 +1,1 @@
+This folder should only be written to by scripts that have been QA'd and committed to the QA directory
