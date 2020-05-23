@@ -1,0 +1,78 @@
+---
+title: "DataExploration"
+output: html_document
+---
+
+```{r setup}
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(caret)
+library(car)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+df = read.csv("../Dan/train_cleaned.csv")
+dft = read.csv("../Dan/test_cleaned.csv")
+```
+
+```{r}
+df$SalePrice
+
+
+
+
+```
+
+```{r}
+df$MasVnrArea[is.na(df$MasVnrArea)] = 0
+df$GarageYrBlt[is.na(df$GarageYrBlt)] = df$YearBuilt[is.na(df$GarageYrBlt)]
+```
+
+
+```{r}
+correlationMatrix <- cor(df)
+# summarize the correlation matrix
+print(correlationMatrix)
+# find attributes that are highly corrected (ideally >0.75)
+highlyCorrelated <- findCorrelation(correlationMatrix, cutoff=0.5)
+# print indexes of highly correlated attributes
+print(highlyCorrelated)
+```
+
+```{r}
+model.saturated = lm(SalePrice ~ ., data = df)
+```
+
+```{r}
+summary(model.saturated)
+```
+
+```{r}
+plot(model.saturated)
+```
+
+```{r}
+influencePlot(model.saturated)
+
+#vif(model.saturated)
+
+avPlots(model.saturated)
+```
+
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
