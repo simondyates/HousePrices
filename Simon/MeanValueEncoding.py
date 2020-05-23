@@ -1,5 +1,5 @@
 # This takes an aggressive approach of encoding all categorical variables
-# by the mean value of the SalePrice
+# by the mean value of the log of SalePrice
 
 import pandas as pd
 import numpy as np

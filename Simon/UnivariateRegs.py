@@ -8,8 +8,8 @@ import plotly.graph_objects as go
 house = pd.read_csv('./train_meanEnc.csv', index_col='Id')
 
 # Split target from attributes and normalise attribs
-Y = house['SalePrice'].to_numpy().reshape(-1, 1)
-X = house.drop('SalePrice', axis=1)
+Y = np.log(house['SalePrice'].to_numpy()).reshape(-1, 1)
+X = house.drop(['SalePrice', 'logSalePrice'], axis=1)
 X = (X - X.mean(axis=0)) / X.std(axis=0)
 
 results = pd.DataFrame(index=X.columns, columns=['Beta', 'Coef t', 'R2'])
@@ -30,7 +30,7 @@ for col in X.columns:
     results.loc[col] = [beta[1, 0], t_stats[1, 0], 1 - MSE/MTE]
 
 results = results.sort_values('R2', ascending = False)
-results.to_csv('./univariate_meanEcoding.csv')
+#results.to_csv('./univariate_meanEcodingNoScale.csv')
 top20 = results.iloc[0:20]
 bottom20 = results.iloc[-1:-21:-1]
 
