@@ -19,7 +19,16 @@ ords = ['LotShape', 'LandContour', 'Utilities', 'LandSlope', 'OverallQual',
          'Electrical', 'KitchenQual', 'Functional', 'FireplaceQu', 'GarageFinish',
          'GarageQual', 'GarageCond', 'PavedDrive', 'Fence']
 
-categors = noms + ords
+#sparse = ['WoodDeckSF', 'OpenPorchSF', 'EnclosedPorch', '3SsnPorch',
+#        'ScreenPorch', 'PoolArea']
+
+# OPTIONAL: 'sparse' are mostly zero except when the thing actually exists, where it's a measurement
+# let's convert these to binary (Exists / doesn't exist) and then MV classify
+
+#for col in sparse:
+#    house[col] = house[col].apply(lambda x: int(x>0))
+
+categors = noms + ords #+ sparse
 
 house_enc = house.copy()
 for col in categors:
