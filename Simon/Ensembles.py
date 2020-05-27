@@ -6,19 +6,26 @@ from sklearn.model_selection import train_test_split
 from sklearn import ensemble
 from sklearn.model_selection import GridSearchCV
 
-# import the non-dummified data
-house = pd.read_csv('../derivedData/train_NotDum.csv', index_col='Id')
-house['logSalePrice'] = np.log(house['SalePrice'])
-use_log = False
+# Global Parameters
+use_dum = True
+use_log = True
 
-# Use MV encoding on nominals to avoid column bloat
-cols_to_enc = house.columns[house.dtypes == 'object']
-for col in cols_to_enc:
-    if use_log:
-        gp = house.groupby(col)['logSalePrice'].mean()
-    else:
-        gp = house.groupby(col)['SalePrice'].mean()
-    house[col] = house[col].apply(lambda x: gp[x])
+# import the data
+if use_dum:
+    house = pd.read_csv('../derivedData/train_cleaned.csv', index_col='Id')
+else:
+    house = pd.read_csv('../derivedData/train_NotDum.csv', index_col='Id')
+house['logSalePrice'] = np.log(house['SalePrice'])
+
+if not(use_dum):
+    # Use MV encoding on nominals
+    cols_to_enc = house.columns[house.dtypes == 'object']
+    for col in cols_to_enc:
+        if use_log:
+            gp = house.groupby(col)['logSalePrice'].mean()
+        else:
+            gp = house.groupby(col)['SalePrice'].mean()
+        house[col] = house[col].apply(lambda x: gp[x])
 
 # Create train and test sets
 X = house.drop(['SalePrice', 'logSalePrice'],axis=1)
@@ -32,8 +39,7 @@ X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.2, random_st
 randomForest = ensemble.RandomForestRegressor(random_state=0)
 #bagging      = ensemble.BaggingClassifier()
 
-rF_params = {}
-#rF_params = {'max_depth': 30, 'max_features': 30, 'max_samples': 0.75, 'min_samples_leaf': 1, 'n_estimators': 500}
+rF_params = {'max_depth': 30, 'max_features': 30, 'max_samples': None, 'min_samples_leaf': 1, 'n_estimators': 500}
 if rF_params == {}:
     # Tune hyperparameters: takes about 3 minutes minutes run time
     grid_para_forest = [{
