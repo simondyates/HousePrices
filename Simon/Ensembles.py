@@ -31,21 +31,29 @@ X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.2, random_st
 # Initialise model
 randomForest = ensemble.RandomForestRegressor(random_state=0)
 #bagging      = ensemble.BaggingClassifier()
-#randomForest.fit(X_train, y_train)
-#print(f'RF train score {randomForest.score(X_train, y_train):.02%}')
-#print(f'RF test score {randomForest.score(X_test, y_test):.02%}')
-#feature_importance = randomForest.feature_importances_
-#s = pd.Series(feature_importance, index=X.columns).sort_values(ascending=False)
 
-grid_para_forest = [{
-    #'n_estimators': [50, 100, 500],
-    #'min_samples_leaf': [1, 10, 30],
-    #'max_depth': [3, 10, 30],
-    #'max_features': [10, 30, 50],
-    'max_samples': [.25, .5, .75, 1]
-    }]
-grid_search_forest = GridSearchCV(randomForest, grid_para_forest, cv=5, n_jobs=-1)
-start_t = time.time()
-grid_search_forest.fit(X_train, y_train)
-end_t = time.time()
-print(end_t - start_t)
+rF_params = {}
+#rF_params = {'max_depth': 30, 'max_features': 30, 'max_samples': 0.75, 'min_samples_leaf': 1, 'n_estimators': 500}
+if rF_params == {}:
+    # Tune hyperparameters: takes about 3 minutes minutes run time
+    grid_para_forest = [{
+        'n_estimators': [50, 100, 500],
+        'min_samples_leaf': [1, 10, 30],
+        'max_depth': [10, 30, None],
+        'max_features': [10, 30, 'auto'],
+        'max_samples': [.25, .5, .75, None]
+        }]
+    grid_search_forest = GridSearchCV(randomForest, grid_para_forest, cv=5, n_jobs=-1)
+    start_t = time.time()
+    grid_search_forest.fit(X_train, y_train)
+    end_t = time.time()
+
+    print(f'Time taken: {end_t - start_t}')
+    print('Best parameters: '+ str(grid_search_forest.best_params_))
+    rF_final = grid_search_forest.best_estimator_
+else:
+    rF_final = randomForest.set_params(**rF_params).fit(X_train, y_train)
+
+print(f'RF train score {rF_final.score(X_train, y_train):.02%}')
+print(f'RF test score {rF_final.score(X_test, y_test):.02%}')
+feature_importance = pd.Series(rF_final.feature_importances_, index=X.columns).sort_values(ascending=False)
