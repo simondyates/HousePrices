@@ -13,6 +13,8 @@ from plotly.subplots import make_subplots
 # import the data
 house = pd.read_csv('./train_meanEnc.csv', index_col='Id')
 house['priceSqFt'] = house['SalePrice'] / house['GrLivArea']
+# follow advice from http://jse.amstat.org/v19n3/decock.pdf to remove outliers
+house = house[house['GrLivArea']<=4000]
 
 # create a Box-Cox transformed y
 y = house['SalePrice'].to_numpy().reshape(-1, 1)
@@ -140,3 +142,7 @@ fig.update_layout(
 fig.update_yaxes(title='', tickformat='.0%', secondary_y=False)
 fig.update_yaxes(title='|t stat|', tickformat='.0f', showgrid = False, secondary_y=True)
 fig.show()
+
+
+# insert model_score here
+#print(model_score(lin.predict(Xs_test[:, col_picks]), ytest))

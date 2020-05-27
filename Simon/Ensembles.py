@@ -8,7 +8,7 @@ from sklearn.model_selection import GridSearchCV
 
 # Global Parameters
 use_dum = False
-use_log = True
+use_log = False
 
 # import the data
 if use_dum:
@@ -89,4 +89,5 @@ print(f'G Boost train score {gB_final.score(X_train, y_train):.02%}')
 print(f'G Boost test score {gB_final.score(X_test, y_test):.02%}')
 gB_feature_imp = pd.Series(gB_final.feature_importances_, index=X.columns).sort_values(ascending=False)
 
-
+#model_score(rF_final, X_test, y_test)
+#model_score(gB_final, X_test, y_test)

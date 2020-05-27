@@ -56,6 +56,6 @@ if svr_params == {}:
 else:
     svr_final = svr.set_params(**svr_params).fit(X_train, y_train)
 
-
 print(f'SVR train score {svr_final.score(X_train, y_train):.02%}')
 print(f'SVR test score {svr_final.score(X_test, y_test):.02%}')
+
