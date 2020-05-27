@@ -1,0 +1,206 @@
+---
+title: "RFExploration"
+output: html_document
+---
+
+```{r setup}
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(caret)
+library(car)
+library(VIM)
+library(MASS)
+```
+
+```{r}
+library(randomForest)
+options(scipen = 999)
+```
+
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r input}
+df = read.csv("../Dan/train_NotDum.csv")
+dft = read.csv("../Dan/test_NotDum.csv")
+```
+
+```{r}
+```
+
+
+```{r}
+df
+df = df %>% dplyr::mutate(., PoolArea = ifelse(PoolArea > 0, 1, 0))
+
+dfr <- df %>% dplyr::select(., -1, -2)
+
+dfr
+```
+
+```{r}
+
+```
+
+
+```{r}
+dfrr <- dfr %>% dplyr::select(., -5, -6, -8, -9, -21, -27, -35, -38, -41, -44, -67, -68, -69, -73)
+
+dfrr
+dfr
+```
+
+```{r}
+dfrrr <- dfrr %>% dplyr::select(., -6, -9, -57, -58, -59, -60, -61)
+dfrrr
+```
+
+```{r}
+
+```
+
+
+```{r}
+set.seed(10)
+rf  = randomForest(SalePrice ~ ., data = df, importance = TRUE)
+rfr = randomForest(SalePrice ~ ., data = dfr, importance = TRUE)
+rfrr = randomForest(SalePrice ~ ., data = dfrr, importance = TRUE)
+rfrrr = randomForest(SalePrice ~ ., data = dfrrr, importance = TRUE)
+```
+
+```{r}
+print(rf)
+sqrt(tail(rf$mse, 1))
+print(rfr)
+sqrt(tail(rfr$mse, 1))
+print(rfrr)
+sqrt(tail(rfrr$mse, 1))
+print(rfrrr)
+sqrt(tail(rfrrr$mse, 1))
+
+#rf
+#rfr
+#rfrr
+#rfrrr
+
+#importance(rf)
+#importance(rfr)
+#importance(rfrr)
+#importance(rfrrr)
+```
+
+
+```{r}
+ran = seq(260, 600, by = 20)
+dict = {}
+
+
+for(x in ran){
+  rfnt = randomForest(SalePrice ~ ., data = dfreducedr, ntree = x, importance = TRUE)
+  print(rfnt)
+  print(sqrt(tail(rfnt$mse, 1)))
+  dict[[x]] = sqrt(tail(rfnt$mse, 1))
+}
+  
+
+```
+
+```{r}
+rfnt = randomForest(SalePrice ~ ., data = dfrrr, ntree = 520, importance = TRUE)
+rfntt = randomForest(SalePrice ~ ., data = dfrrr, ntree = 380, importance = TRUE)
+print(rfnt)
+print(sqrt(tail(rfnt$mse, 1)))
+print(rfntt)
+print(sqrt(tail(rfntt$mse, 1)))
+  
+```
+
+```{r}
+ran = seq(14, 26)
+
+dictm = {}
+
+
+for(x in ran){
+  rfnt = randomForest(SalePrice ~ ., data = dfreducedr, mtry = x, importance = TRUE)
+  print(rfnt)
+  print(sqrt(tail(rfnt$mse, 1)))
+  dictm[[x]] = (sqrt(tail(rfnt$mse, 1)))
+}
+```
+
+
+```{r}
+s = 
+hist(df$SalePrice)
+summarise(df, sum(df$SalePrice < 200000))
+1025/1460
+
+
+27260/200000
+14933/200000
+```
+
+```{r}
+dfreducedr <- dfrrr %>% filter(., SalePrice < 200000)
+rfreducedr  = randomForest(SalePrice ~ ., data = dfreducedr, importance = TRUE)
+print(rfreducedr)
+sqrt(tail(rfreducedr$mse, 1))
+```
+
+```{r}
+dfreduced <- dfrrr %>% filter(., SalePrice > 200000)
+rfreduced  = randomForest(SalePrice ~ ., data = dfreduced, importance = TRUE)
+print(rfreduced)
+sqrt(tail(rfreduced$mse, 1))
+```
+
+```{r}
+dfx <- df %>% filter(., SalePrice < 200000)
+dfx <- dfx %>% dplyr::select(., -1, -2, -7, -10, -11, -12, -15, -23, -37, -40, -43, -49, -70, -72, -74, -75, -76, -77)
+dfx <- dfx %>% dplyr::select(., -15, -35, -54)
+```
+
+```{r}
+rfx  = randomForest(SalePrice ~ ., data = dfx, importance = TRUE)
+```
+
+```{r}
+print(rfx)
+sqrt(tail(rfx$mse, 1))
+importance(rfx)
+```
+
+```{r}
+dfcl <- df %>% mutate(., ov = as.factor(ifelse(SalePrice > 200000, "Y", "N")))
+dfcl
+```
+
+```{r}
+dfcl <- dfcl %>% dplyr::select(., -X, -Id, -Street, -SalePrice)
+```
+
+
+```{r}
+rfcl  = randomForest(ov ~ ., data = dfcl, importance = TRUE)
+```
+
+```{r}
+print(rfcl)
+importance(rfcl)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
