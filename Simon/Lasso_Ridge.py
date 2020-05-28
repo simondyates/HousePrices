@@ -1,80 +1,123 @@
 # Runs Laso and Ridge Regressions on the 30 columns I picked from univariate regression
 import pandas as pd
 import numpy as np
+import time
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import Lasso, Ridge
-from sklearn.model_selection import GridSearchCV, KFold
+from sklearn.model_selection import GridSearchCV
+from ModelScore import model_score
+
+# Global Parameters
+use_dum = False
+use_log = True
+scale = True
 
 # import the data
-house = pd.read_csv('./train_cleaned.csv', index_col='Id')
-y = house['SalePrice'].to_numpy().reshape(-1, 1)
-# Box-Cox transform the y
-y = np.log(y)
-X = house.drop('SalePrice', axis=1)
+if use_dum:
+    house = pd.read_csv('../derivedData/train_cleaned.csv', index_col='Id')
+else:
+    house = pd.read_csv('../derivedData/train_NotDum.csv', index_col='Id')
+house['logSalePrice'] = np.log(house['SalePrice'])
 
-# select columns
-top30 = ['OverallQual', 'Neighborhood', 'GrLivArea', 'ExterQual', 'BsmtQual',
-         'KitchenQual', 'GarageCars', 'TotalBsmtSF', 'FullBath', 'FireplaceQu',
-         'YearBuilt', 'YearRemodAdd', 'Foundation', 'MSSubClass', 'MasVnrArea',
-         'HeatingQC', 'SaleType', 'SaleCondition', 'OverallCond', 'MSZoning',
-         'WoodDeckSF', 'OpenPorchSF', 'HouseStyle', 'HalfBath', 'LotShape',
-         'LotArea', 'CentralAir', 'Electrical', 'RoofStyle', 'PavedDrive']
-X = X[top30]
+if not(use_dum):
+    # Use MV encoding on nominals
+    cols_to_enc = house.columns[house.dtypes == 'object']
+    for col in cols_to_enc:
+        if use_log:
+            gp = house.groupby(col)['logSalePrice'].mean()
+        else:
+            gp = house.groupby(col)['SalePrice'].mean()
+        house[col] = house[col].apply(lambda x: gp[x])
 
-# split into test / train
-Xtrain, Xtest, ytrain, ytest = train_test_split(X,y,test_size=0.2, random_state=0)
+# Create train and test sets
+X = house.drop(['SalePrice', 'logSalePrice'],axis=1)
+if use_log:
+    y = house['logSalePrice']
+else:
+    y = house['SalePrice']
+X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.2, random_state=42)
 
-# create pipeline of dummification and scaling
-cols_to_dum = [i for i, x in enumerate(X.dtypes == 'object') if x ==True]
-ohe = OneHotEncoder()
-ohe.set_params(drop='first', sparse=False)
-ss = StandardScaler()
-ctrans = ColumnTransformer( transformers = [('Dummify', ohe, cols_to_dum)],
-                            remainder = 'passthrough')
-## step 1: dummify and transform
-ctrans.fit(Xtrain) # learn only from the training data
-Xdum_train = ctrans.transform(Xtrain)
-## step 2: standardize the columns (after dummifying!)
-ss.fit(Xdum_train)
-Xs_train = ss.transform(Xdum_train)
+if (scale):
+    ss = StandardScaler()
+    ss.fit(X_train)
+    X_train = ss.transform(X_train)
+    X_test = ss.transform(X_test)
 
-def preprocess_feat(X):
-# for future use on test
-    Xdum = ctrans.transform(X)
-    Xproc = ss.transform(Xdum)
-    return Xproc
-
-# initialise Lasso, Ridge and GridSearchCV
+# Initialise Lasso model
 lasso = Lasso()
+
+lasso_params = {'alpha': .02} # I actually overrode grid, which wanted 0.0001 and used pretty much all the columns
+if lasso_params == {}:
+    # Tune hyperparameters: takes about 3 minutes run time
+    grid_para_lasso = [{'alpha': [1e-4, 1e-2, 0.1, 1, 2, 10, 100, 500, 750, 1000]}]
+    grid_search_lasso = GridSearchCV(lasso, grid_para_lasso, cv=5, n_jobs=-1)
+    start_t = time.time()
+    grid_search_lasso.fit(X_train, y_train)
+    end_t = time.time()
+    print(f'Time taken: {end_t - start_t}')
+    print('Best parameters: '+ str(grid_search_lasso.best_params_))
+    lasso_final = grid_search_lasso.best_estimator_
+else:
+    lasso_final = lasso.set_params(**lasso_params).fit(X_train, y_train)
+
+print(f'Lasso train score {lasso_final.score(X_train, y_train):.02%}')
+print(f'Lasso test score {lasso_final.score(X_test, y_test):.02%}')
+print(f'Lasso cols used {sum(lasso_final.coef_ != 0)}')
+
+# Calculate feature importance
+def t_stat(reg, X, y):
+    col_bool = reg.coef_ != 0
+    X_s = X.loc[:, col_bool]
+    sse = np.sum((reg.predict(X) - y) ** 2, axis=0) / float(X_s.shape[0] - X_s.shape[1])
+    try:
+        xTx_inv = np.linalg.inv(X_s.T @ X_s)
+        if min(np.diag(xTx_inv)) <= 0:
+            t = np.full([1, X.shape[1]], np.nan)
+        else:
+            se_s = np.sqrt(np.diagonal(sse * xTx_inv))
+            i = 0
+            t = np.zeros([1, X.shape[1]])
+            for j, b in enumerate(col_bool):
+                if not(b): # i.e. reg.coef is zero
+                    t[0, j] = 0
+                else:
+                    t[0, j] = reg.coef_[j] / se_s[i]
+                    i += 1
+    except:
+        t = np.full([1, X.shape[1]], np.nan)
+    return t[0]
+
+if (scale):
+    lasso_feature_imp = pd.Series(abs(lasso_final.coef_), index=X.columns).sort_values(ascending=False)
+else:
+    lasso_feature_imp = pd.Series(abs(t_stat(lasso_final, X_train, y_train)), index=X.columns).sort_values(ascending=False)
+    
+# Initialise Ridge model
 ridge = Ridge()
-params_lasso = [{'alpha':[1e-4,1e-2,0.1,1,2,10,100, 500, 750, 1000]}]
-params_ridge = [{'alpha':[1e-4,1e-2,0.1,1,2,10,100, 500, 750, 1000]}]
-# kf5 = KFold(n_splits=5, shuffle=False) # not used because this is the default anyway
-grid_lasso = GridSearchCV(estimator=lasso, param_grid=params_lasso) #, cv = kf5)
-grid_ridge = GridSearchCV(estimator=ridge, param_grid=params_ridge) #, cv = kf5)
-grid_lasso.fit(Xs_train, ytrain)
-grid_ridge.fit(Xs_train, ytrain)
 
-# pick winning model
-lasso_score = grid_lasso.best_score_
-ridge_score = grid_ridge.best_score_
-lasso_alpha = grid_lasso.best_params_['alpha']
-ridge_alpha = grid_ridge.best_params_['alpha']
-print(f'In Sample Lasso: {lasso_score:.2%}')
-print(f'In Sample Ridge: {ridge_score:.2%}')
-print(f'Lasso alpha: {lasso_alpha:.4f}')
-print(f'Ridge alpha: {ridge_alpha:.4f}')
+ridge_params = {'alpha': 100}
+if ridge_params == {}:
+    # Tune hyperparameters: takes about 3 minutes run time
+    grid_para_ridge = [{'alpha': [1e-4, 1e-2, 0.1, 1, 2, 10, 100, 500, 750, 1000]}]
+    grid_search_ridge = GridSearchCV(ridge, grid_para_ridge, cv=5, n_jobs=-1)
+    start_t = time.time()
+    grid_search_ridge.fit(X_train, y_train)
+    end_t = time.time()
+    print(f'Time taken: {end_t - start_t}')
+    print('Best parameters: '+ str(grid_search_ridge.best_params_))
+    ridge_final = grid_search_ridge.best_estimator_
+else:
+    ridge_final = ridge.set_params(**ridge_params).fit(X_train, y_train)
 
-# evaluate performance on OOS data
-Xs_test = preprocess_feat(Xtest)
-print( f'OOS Lasso {grid_lasso.best_estimator_.score(Xs_test,ytest):.2%}')
-print( f'OOS Ridge {grid_ridge.best_estimator_.score(Xs_test, ytest):.2%}')
+print(f'Ridge train score {ridge_final.score(X_train, y_train):.02%}')
+print(f'Ridge test score {ridge_final.score(X_test, y_test):.02%}')
+print(f'Ridge cols used {sum(ridge_final.coef_ != 0)}')
 
-lasso_coefs = grid_lasso.best_estimator_.coef_
-ridge_coefs = grid_ridge.best_estimator_.coef_
+if (scale):
+    ridge_feature_imp = pd.Series(abs(ridge_final.coef_), index=X.columns).sort_values(ascending=False)
+else:
+    ridge_feature_imp = pd.Series(abs(t_stat(ridge_final, X_train, y_train)), index=X.columns).sort_values(ascending=False)
 
-print(f'Lasso used {(lasso_coefs!=0).sum()} columns')
-print(f'Ridge used {(ridge_coefs!=0).sum()} columns')
+model_score(lasso_final, X_test, y_test, saves=False)
+model_score(ridge_final, X_test, y_test, saves=False)

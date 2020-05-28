@@ -5,10 +5,11 @@ import time
 from sklearn.model_selection import train_test_split
 from sklearn import ensemble
 from sklearn.model_selection import GridSearchCV
+from ModelScore import model_score
 
 # Global Parameters
 use_dum = False
-use_log = False
+use_log = True
 
 # import the data
 if use_dum:
@@ -33,7 +34,7 @@ if use_log:
     y = house['logSalePrice']
 else:
     y = house['SalePrice']
-X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.2, random_state=0)
+X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.2, random_state=42)
 
 # Initialise RF model
 randomForest = ensemble.RandomForestRegressor(random_state=0)
@@ -89,5 +90,5 @@ print(f'G Boost train score {gB_final.score(X_train, y_train):.02%}')
 print(f'G Boost test score {gB_final.score(X_test, y_test):.02%}')
 gB_feature_imp = pd.Series(gB_final.feature_importances_, index=X.columns).sort_values(ascending=False)
 
-#model_score(rF_final, X_test, y_test)
-#model_score(gB_final, X_test, y_test)
+model_score(rF_final, X_test, y_test, saves=False)
+model_score(gB_final, X_test, y_test, saves=False)
