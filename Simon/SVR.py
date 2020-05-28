@@ -5,6 +5,7 @@ import time
 from sklearn.model_selection import train_test_split
 from sklearn import svm
 from sklearn.model_selection import GridSearchCV
+from ModelScore import model_score
 
 # Global Parameters
 use_dum = False
@@ -38,13 +39,13 @@ X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.2, random_st
 # Initialise RF model
 svr = svm.SVR()
 
-svr_params = {'C': 100, 'epsilon': 0.1, 'gamma': 'scale'}
+svr_params = {'C': 100, 'epsilon': 0.01, 'gamma': 'scale'}
 if svr_params == {}:
     # Tune hyperparameters: quick unless you test for poly when it seems never to come back
     grid_para_svr = [{
         'gamma': ['scale', 100, 50], # big gamma means low var so precise
         'C':[500, 100, 10], # big value means don't let errors happen
-        'epsilon': [.1, .01, .001] # big value means don't penalize a wide range around the boundary
+        'epsilon': [1, .1, .01, .001] # big value means don't penalize a wide range around the boundary
         }]
     grid_search_svr = GridSearchCV(svr, grid_para_svr, cv=5, n_jobs=-1)
     start_t = time.time()
@@ -58,4 +59,6 @@ else:
 
 print(f'SVR train score {svr_final.score(X_train, y_train):.02%}')
 print(f'SVR test score {svr_final.score(X_test, y_test):.02%}')
+
+model_score(svr_final, X_test, y_test, saves=False)
 
