@@ -31,7 +31,48 @@ dft = read.csv("../Dan/test_NotDum.csv")
 ```
 
 ```{r}
+df = df %>% dplyr::mutate(., PoolArea = ifelse(PoolArea > 0, 1, 0))
+dfc = df %>% dplyr::select(., -X, -Id, -Street, -Utilities, -LotConfig, -Condition2, -RoofMatl, -ExterCond, -BsmtFinType2, -Heating, -Electrical, -LowQualFinSF, -BsmtHalfBath, -EnclosedPorch, -X3SsnPorch, -PoolArea, -Fence, -MoSold, -YrSold)
+dfcl = dfc %>% mutate(., SalePrice = log(SalePrice))
 ```
+
+```{r}
+rfc = randomForest(SalePrice ~ ., data = dfc, importance = TRUE)
+rfl = randomForest(SalePrice ~ ., data = dfcl, importance = TRUE)
+```
+
+
+```{r}
+rfc
+l = (rfc$predicted-dfc$SalePrice)**2
+sqrt(sum(l)/1460)
+k = abs(rfc$predicted-dfc$SalePrice)/dfc$SalePrice
+j = (1 -(abs(dfc$SalePrice-rfc$predicted)/dfc$SalePrice))
+sum(k)/1460
+sum(j)/1460
+
+
+rfl
+
+
+q = exp(rfl$predicted)
+w = exp(dfcl$SalePrice)
+l = (exp(rfl$predicted)-exp(dfcl$SalePrice))**2
+sqrt(sum(l)/1460)
+k = abs(exp(rfl$predicted) - exp(dfcl$SalePrice))/exp(dfcl$SalePrice)
+j = 1 - abs(exp(rfl$predicted) - exp(dfcl$SalePrice))/exp(dfcl$SalePrice)
+sum(k)/1460
+sum(j)/1460
+```
+
+
+
+
+```{r}
+dfrrr
+dfc
+```
+
 
 
 ```{r}
@@ -40,6 +81,11 @@ df = df %>% dplyr::mutate(., PoolArea = ifelse(PoolArea > 0, 1, 0))
 
 dfr <- df %>% dplyr::select(., -1, -2)
 
+dfrr <- dfr %>% dplyr::select(., -5, -6, -8, -9, -21, -27, -35, -38, -41, -44, -67, -68, -69, -73)
+
+dfrrr <- dfrr %>% dplyr::select(., -6, -9, -57, -58, -59, -60, -61)
+
+df
 dfr
 ```
 
@@ -49,7 +95,7 @@ dfr
 
 
 ```{r}
-dfrr <- dfr %>% dplyr::select(., -5, -6, -8, -9, -21, -27, -35, -38, -41, -44, -67, -68, -69, -73)
+
 
 dfrr
 dfr
@@ -62,36 +108,120 @@ dfrrr
 
 ```{r}
 
+dfl = df %>% mutate(., SalePrice = log(SalePrice))
+dfll = dfr %>% mutate(., SalePrice = log(SalePrice))
+dflll = dfrr %>% mutate(., SalePrice = log(SalePrice))
+dfllll = dfrrr %>% mutate(., SalePrice = log(SalePrice))
+dfcl = dfc %>% mutate(., SalePrice = log(SalePrice))
+
 ```
 
 
 ```{r}
-set.seed(10)
+df
+dfr
+dfrr
+dfrrr
+
+```
+
+
+```{r}
+
 rf  = randomForest(SalePrice ~ ., data = df, importance = TRUE)
 rfr = randomForest(SalePrice ~ ., data = dfr, importance = TRUE)
 rfrr = randomForest(SalePrice ~ ., data = dfrr, importance = TRUE)
 rfrrr = randomForest(SalePrice ~ ., data = dfrrr, importance = TRUE)
+rfc = randomForest(SalePrice ~ ., data = dfc, importance = TRUE)
 ```
+
+```{r}
+rfc = randomForest(SalePrice ~ ., data = dfc, importance = TRUE)
+rfl = randomForest(SalePrice ~ ., data = dfcl, importance = TRUE)
+```
+
+
+```{r}
+rfl = randomForest(SalePrice ~ ., data = dfl, importance = TRUE)
+rfll = randomForest(SalePrice ~ ., data = dfll, importance = TRUE)
+rflll = randomForest(SalePrice ~ ., data = dflll, importance = TRUE)
+rfllll = randomForest(SalePrice ~ ., data = dfllll, importance = TRUE)
+```
+
+```{r}
+dfc
+```
+
+
+```{r}
+rfc
+l = (rfc$predicted-dfc$SalePrice)**2
+sqrt(sum(l)/1460)
+k = abs(rfc$predicted-dfc$SalePrice)/dfc$SalePrice
+j = (1 -(abs(dfc$SalePrice-rfc$predicted)/dfc$SalePrice))
+sum(k)/1460
+sum(j)/1460
+
+
+rfl
+
+
+q = exp(rfl$predicted)
+w = exp(dfcl$SalePrice)
+l = (exp(rfl$predicted)-exp(dfcl$SalePrice))**2
+sqrt(sum(l)/1460)
+k = abs(exp(rfl$predicted) - exp(dfcl$SalePrice))/exp(dfcl$SalePrice)
+j = 1 - abs(exp(rfl$predicted) - exp(dfcl$SalePrice))/exp(dfcl$SalePrice)
+sum(k)/1460
+sum(j)/1460
+
+```
+
+
+```{r}
+print(rfl)
+print(rfll)
+print(rflll)
+print(rfllll)
+
+```
+
+
 
 ```{r}
 print(rf)
 sqrt(tail(rf$mse, 1))
+which.min(rf$mse)
+min(sqrt(rf$mse))
 print(rfr)
 sqrt(tail(rfr$mse, 1))
+which.min(rfr$mse)
+min(sqrt(rfr$mse))
 print(rfrr)
 sqrt(tail(rfrr$mse, 1))
+which.min(rfrr$mse)
+min(sqrt(rfrr$mse))
 print(rfrrr)
 sqrt(tail(rfrrr$mse, 1))
+which.min(rfrrr$mse)
+min(sqrt(rfrrr$mse))
+print(rfc)
+sqrt(tail(rfc$mse, 1))
+which.min(rfc$mse)
+min(sqrt(rfc$mse))
+
+
 
 #rf
 #rfr
 #rfrr
 #rfrrr
 
-#importance(rf)
-#importance(rfr)
-#importance(rfrr)
-#importance(rfrrr)
+importance(rf)
+importance(rfr)
+importance(rfrr)
+importance(rfrrr)
+importance(rfc)
 ```
 
 
@@ -123,22 +253,24 @@ print(sqrt(tail(rfntt$mse, 1)))
 ```{r}
 ran = seq(14, 26)
 
-dictm = {}
+
 
 
 for(x in ran){
-  rfnt = randomForest(SalePrice ~ ., data = dfreducedr, mtry = x, importance = TRUE)
-  print(rfnt)
-  print(sqrt(tail(rfnt$mse, 1)))
-  dictm[[x]] = (sqrt(tail(rfnt$mse, 1)))
+  rfmt = randomForest(SalePrice ~ ., data = dfc, mtry = x, importance = TRUE)
+  print(rfmt)
+  print(sqrt(tail(rfmt$mse, 1)))
+  l = (rfmt$predicted-dfc$SalePrice)**2
+  k = abs(rfmt$predicted-dfc$SalePrice)/dfc$SalePrice
+  j = (1 -(abs(dfc$SalePrice-rfmt$predicted)/dfc$SalePrice))
+  print(sum(k)/1460)
+  print(sum(j)/1460)
 }
 ```
 
 
 ```{r}
-s = 
-hist(df$SalePrice)
-summarise(df, sum(df$SalePrice < 200000))
+
 1025/1460
 
 
@@ -194,6 +326,14 @@ rfcl  = randomForest(ov ~ ., data = dfcl, importance = TRUE)
 print(rfcl)
 importance(rfcl)
 ```
+
+```{r}
+plot(dfc$SalePrice, rfc$predicted)
+plot(dfc$SalePrice)
+plot(rfc$predicted)
+
+```
+
 
 ## Including Plots
 
