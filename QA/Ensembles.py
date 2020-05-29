@@ -90,8 +90,9 @@ print(f'G Boost train score {gB_final.score(X_train, y_train):.02%}')
 print(f'G Boost test score {gB_final.score(X_test, y_test):.02%}')
 gB_feature_imp = pd.Series(gB_final.feature_importances_, index=X.columns).sort_values(ascending=False)
 
+# Output results
 model_score(rF_final, X_test, y_test, saves=False)
 model_score(gB_final, X_test, y_test, saves=False)
 
-model_features(rF_final, X_test, y_test, X.columns, saves=False)
-model_features(gB_final, X_test, y_test, X.columns, saves=False)
+model_features(rF_final, rF_feature_imp.index, rF_feature_imp, saves=False)
+model_features(gB_final, gB_feature_imp.index, gB_feature_imp, saves=False)
