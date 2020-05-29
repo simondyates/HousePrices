@@ -5,7 +5,7 @@ import time
 from sklearn.model_selection import train_test_split
 from sklearn import ensemble
 from sklearn.model_selection import GridSearchCV
-from ModelScore import model_score
+from ModelScore import model_score, model_features
 
 # Global Parameters
 use_dum = False
@@ -92,3 +92,6 @@ gB_feature_imp = pd.Series(gB_final.feature_importances_, index=X.columns).sort_
 
 model_score(rF_final, X_test, y_test, saves=False)
 model_score(gB_final, X_test, y_test, saves=False)
+
+model_features(rF_final, X_test, y_test, X.columns, saves=False)
+model_features(gB_final, X_test, y_test, X.columns, saves=False)

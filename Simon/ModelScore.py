@@ -1,9 +1,13 @@
+# Outputs (1) a variety of model accuracy stats; and (2) a list of feature importances
+# Optionally saves to /results directory.  Printing can be supressed
+
 import pandas as pd
 import numpy as np
 import os
 from datetime import datetime
 
-def model_score(model, X_test, y_test, prints=True, saves=True):
+# 1. Model Accuracy Stats
+def model_score(model, X_test, y_test, prints=True, saves=False):
     model_name = type(model).__name__
     pred_y_test = model.predict(X_test)
     if max(y_test) < 15:
@@ -46,3 +50,19 @@ def model_score(model, X_test, y_test, prints=True, saves=True):
         print('-' * len(model_name))
     if (saves):
         results.to_csv(f'../results/{model_name[:10]} {dt_stamp}.csv')
+
+# 2. Feature Importance
+
+def model_features(model, feature_names, feature_vals, prints=True, saves=False):
+    model_name = type(model).__name__
+    user_name = os.environ.get('USER')
+    dt_stamp = datetime.now().strftime('%Y-%m-%d %H-%M')
+    header = pd.Series([model_name, user_name, dt_stamp], index=['Model','User', 'Date'])
+    header = header.append(pd.Series(feature_vals, index=feature_names))
+    if (prints):
+        print()
+        print(header)
+        print()
+    if (saves):
+        header.to_csv(f'../results/{model_name[:10]} {dt_stamp} Features.csv')
+

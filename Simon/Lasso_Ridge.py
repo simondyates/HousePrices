@@ -6,7 +6,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import Lasso, Ridge
 from sklearn.model_selection import GridSearchCV
-from ModelScore import model_score
+from ModelScore import model_score, model_features
 
 # Global Parameters
 use_dum = False
@@ -121,3 +121,6 @@ else:
 
 model_score(lasso_final, X_test, y_test, saves=False)
 model_score(ridge_final, X_test, y_test, saves=False)
+
+model_features(lasso_final, lasso_feature_imp.index, lasso_feature_imp, saves=False)
+model_features(ridge_final, ridge_feature_imp.index, ridge_feature_imp, saves=False)
