@@ -1,12 +1,9 @@
 import xgboost as xgb
-from sklearn.model_selection import KFold
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import pandas as pd
 import numpy as np
-import time
-from HousePrices.Dan.ModelScore import model_score
 
 
 def xgboost(booster = 'gblinear', use_log = True, scale = True, use_dum = False):
@@ -72,4 +69,3 @@ def xgboost(booster = 'gblinear', use_log = True, scale = True, use_dum = False)
     grid_search_xgb.fit(X_train, y_train)
 
     return grid_search_xgb
-    # model_score(grid_search_xgb.best_estimator_, X_test, y_test, saves=True)

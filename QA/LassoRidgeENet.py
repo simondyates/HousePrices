@@ -8,7 +8,7 @@ import time
 from HousePrices.Dan.ModelScore import model_score, model_features
 
 
-def linReg(reg='None', use_log=True, scale=True, use_dum=False):
+def linReg(type='None', use_log=True, scale=True, use_dum=False):
     # preparing the data
     if use_dum:
         data = pd.read_csv('../derivedData/train_cleaned.csv', index_col='Id')
@@ -40,26 +40,26 @@ def linReg(reg='None', use_log=True, scale=True, use_dum=False):
         X_train = pd.DataFrame(ss.transform(X_train))
         X_test = pd.DataFrame(ss.transform(X_test))
 
-    if reg.lower() == 'ridge':
+    if type.lower() == 'ridge':
         reg = Ridge(max_iter=1e6)
         params = {
-            'alpha': np.linspace(50, 150, 100),
+            'alpha': np.linspace(50, 150, 50),
             'solver': ['auto', 'cholesky', 'svd', 'lsqr', 'saga']
         }
-    elif reg.lower() == 'lasso':
+    elif type.lower() == 'lasso':
         reg = Lasso(max_iter=1e6)
         params = {
-            'alpha': np.linspace(1e-6, 1, 20),
+            'alpha': [.01],
             'selection': ['cyclic', 'random']
         }
-    elif reg.lower() in ['enet', 'elasticnet', 'elastic']:
+    elif type.lower() in ['enet', 'elasticnet', 'elastic']:
         reg = ElasticNet(max_iter=1e8)
         params = {
             'alpha': np.linspace(1e-6, 400, 20),
             'l1_ratio': np.linspace(0.011, 1, 20),
             'selection': ['cyclic', 'random']
         }
-    elif reg.lower() == 'None':
+    else:
         reg = LinearRegression()
         params = {}
 
@@ -67,19 +67,4 @@ def linReg(reg='None', use_log=True, scale=True, use_dum=False):
 
     grid_search_reg.fit(X_train, y_train)
 
-    # return grid_search_reg
-
-    if (scale):
-        lasso_feature_imp = pd.Series(abs(grid_search_reg.best_estimator_.coef_), index=X.columns).sort_values(ascending=False)
-    # else:
-    #     lasso_feature_imp = pd.Series(abs(t_stat(lasso_final, X_train, y_train)), index=X.columns).sort_values(ascending=False)
-
-    print(grid_search_reg.best_params_)
-    model_score(grid_search_reg.best_estimator_, X_test, y_test, saves=False)
-    model_features(grid_search_reg, lasso_feature_imp.index, lasso_feature_imp, saves=True)
-
-
-linReg(reg = 'lasso')
-# print(lasso.best_params_)
-# print(lasso.best_score_)
-# print(lasso.get_params())
+    return grid_search_reg
