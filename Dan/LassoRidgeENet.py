@@ -7,6 +7,15 @@ import numpy as np
 
 
 def linReg(type='None', use_log=True, scale=True, use_dum=False):
+    '''
+    Runs a linear regression model to the housing data.
+    ------------------
+    Parameters:
+    - type: type of regularization ['None', 'lasso', 'ridge', 'elasticnet']. 
+    - use_log: if True, the target will be log(SalePrice) of houses.
+    - scale: if True, features will be standardized.
+    - use_dum: if True, categorical features will be dummified, otherwise they will be equal to the corresponding mean target for each level of the feature.
+    '''
     # preparing the data
     if use_dum:
         data = pd.read_csv('../derivedData/train_cleaned.csv', index_col='Id')

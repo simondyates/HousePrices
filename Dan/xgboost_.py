@@ -7,6 +7,15 @@ import numpy as np
 
 
 def xgboost(booster = 'gblinear', use_log = True, scale = True, use_dum = False):
+    '''
+    runs a xgboost.
+    --------------------------------
+    parameters:
+    - booster: ['gblinear', 'gbtree', 'dart'] is the booster of xgboost.
+    - use_log: if True, the target will be log(SalePrice) of houses.
+    - scale: if True, features will be standardized.
+    - use_dum: if True, categorical features will be dummified, otherwise they will be equal to the corresponding mean target for each level of the feature.
+    '''
     # preparing the data
     if use_dum:
         data = pd.read_csv('../derivedData/train_cleaned.csv', index_col='Id')
